@@ -22,16 +22,16 @@ To reproduce the figures for the long range experiments in the paper, add all fi
 ## Robot Model ##
 To apply implemented algorithms (e.g., DORM, BRMS, or BRM) for a robot model not already implemented in the models folder, a model of the robot must be defined, which inherits the @GenericStateSpaceModel. See the @SingleIntegrator2DwithGPS and @DoubleIntegrator2DwithGPS for examples on implementing models.
 
-The functions that are required to be implemented are the following:
-`Q = get_process_noise_covariance(obj, x, u)`
-`A = get_process_jacobian(obj, x, u)`
-`A = get_control_jacobian(obj, x, u)`
-`L = get_process_noise_jacobian(obj, x, u)`
-`is_acquired = is_measurement_acquired(obj,x)`
-`R = get_measurement_noise_covariance(obj,x)`
-`H = get_measurement_jacobian(obj, x)`
-`M = get_measurement_noise_jacobian(obj, x)`
-`[x, u, K] = get_states_and_control_inputs(obj, xi, xf)`
+The functions that are required to be implemented are the following:  
+`Q = get_process_noise_covariance(obj, x, u)`  
+`A = get_process_jacobian(obj, x, u)`  
+`A = get_control_jacobian(obj, x, u)`  
+`L = get_process_noise_jacobian(obj, x, u)`  
+`is_acquired = is_measurement_acquired(obj,x)`  
+`R = get_measurement_noise_covariance(obj,x)`  
+`H = get_measurement_jacobian(obj, x)`  
+`M = get_measurement_noise_jacobian(obj, x)`  
+`[x, u, K] = get_states_and_control_inputs(obj, xi, xf)`  
 
 ## Offline Phase ##
 To run the offline phase, a belief space planning object must be defined, which takes a robot model (inherited from @GenericStateSpaceModel), configuration space (state that are not derivatives), velocity space (states that are derivatives), obstacles (represented using the @Rectangle class), and the connection radius (Euclidean distance between configurations for connective vertices) as input.
