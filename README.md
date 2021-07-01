@@ -27,8 +27,8 @@ The functions that are required to be implemented are the following:
 `A = get_process_jacobian(obj, x, u)`  
 `A = get_control_jacobian(obj, x, u)`  
 `L = get_process_noise_jacobian(obj, x, u)`  
-`is_acquired = is_measurement_acquired(obj,x)`  
-`R = get_measurement_noise_covariance(obj,x)`  
+`is_acquired = is_measurement_acquired(obj, x)`  
+`R = get_measurement_noise_covariance(obj, x)`  
 `H = get_measurement_jacobian(obj, x)`  
 `M = get_measurement_noise_jacobian(obj, x)`  
 `[x, u, K] = get_states_and_control_inputs(obj, xi, xf)`  
