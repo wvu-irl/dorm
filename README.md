@@ -39,5 +39,5 @@ To run the offline phase, a belief space planning object must be defined, which 
 After initializing the `@BSP` object, run `@BSP.run_offline(N)` where `N` is the number of iterations for sampling vertices to construct the roadmap. Use `Help BSP.run_offline` for additional details.
 
 ## Online Phase ##
-To run the online phase, the required inputs are the initial mean of the belief, initial covariance matrix of the belief, the goal state, the parameter epsilon for the partial ordering, the guessed maximum eigenvalue occuring along the path (use -1 for to determine automatically), and the method (1=DORM, 2=BRMS, 3=BRM). Use `Help BSP.run_online` for additional details.
+To run the online phase, the required inputs are the initial mean of the belief, initial covariance matrix of the belief, the goal state, the parameter epsilon for the partial ordering, the guessed maximum eigenvalue occuring along the path (use -1 for to determine automatically), and the method (1=DORM, 2=BRMS, 3=BRM). Note a best-first search is used for DORM, BRMS, and BRM during the online phase. Use `Help BSP.run_online` for additional details.
 
