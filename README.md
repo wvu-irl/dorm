@@ -16,7 +16,7 @@ To reproduce the figures for the short range experiments in the paper, add all f
 ## Long Range Experiments ##
 To reproduce the figures for the long range experiments in the paper, add all files to the path, then run `exp_offline_SI.m` and `exp_online_SI.m` for the single integrator and `exp_offline_DI.m` and `exp_online_DI.m` for the double integrator. 
 
-The offline phases saves a file with named with the following format: `bsp_mm-dd-yyyy HH-MM.mat`. Before running the scripts for the online phase, change the `load(...)` commands at the beginning of the online scripts to the name of the file generated in the offline phase.
+The offline phase saves a file with named with the following format: `bsp_mm-dd-yyyy HH-MM.mat`. Before running the scripts for the online phase, change the `load(...)` commands at the beginning of the online scripts to the name of the file generated in the offline phase.
 
 **Note:** The offline phase may be skipped by downloading the data generated for the experiments [here](https://drive.google.com/drive/folders/1zgiV1a3GxgNoxA_QA_tgA3r1ysOj_V37?usp=sharing). You must download `bsp_22_SI.mat` and `bsp_22_DI.mat` and add to the path. Then, run`exp_online_SI.m` for the single integrator and `exp_online_DI.m` for the double integrator. The data generated for the offline phase for additional seeds is provided at the link. However, if using the data for a different seed, change the `load(...)` command at the beginning of `exp_online_SI.m` and `exp_online_DI.m`.
 
