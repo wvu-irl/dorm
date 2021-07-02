@@ -24,7 +24,7 @@ The offline phase saves a file with named with the following format: `bsp_mm-dd-
 ## Robot Model ##
 To apply implemented algorithms (e.g., DORM, BRMS, or BRM) for a robot model not already implemented in the models folder, a model of the robot must be defined, which inherits the @GenericStateSpaceModel. See the @SingleIntegrator2DwithGPS and @DoubleIntegrator2DwithGPS for examples on implementing models.
 
-The functions that are required to be implemented are the following:  
+The functions that are required to be implemented in the @GenericStateSpaceModel are the following:  
 `Q = get_process_noise_covariance(obj, x, u)`  
 `A = get_process_jacobian(obj, x, u)`  
 `A = get_control_jacobian(obj, x, u)`  
