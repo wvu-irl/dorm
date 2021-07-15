@@ -2,7 +2,7 @@
 Code for running the D-Optimality Roadmap (DORM) using a determinant bound for belief space planning. The code may also be used for running the belief roadmap (BRM) and the belief roadmap search (BRMS).
 
 # Related Publications #
-Please cite the following papers if you make use of our algorithm or code in any of your own endeavors:
+Please cite the following paper if you make use of our algorithm or code in any of your own endeavors:
 
 * **[A Determinant Bound on the Covariance Matrix for Path Planning in Gaussian Belief Space](...)**, *J. Strader and Y. Gu*
 
