@@ -1,4 +1,4 @@
-function [] = run_offline(obj, iterations)
+function [] = run_offline_qrm(obj, iterations)
 % function [] = run_offline(obj, iterations)
 %
 % Computes D-Optimality Roadmap (DORM), which can be queried online for 
@@ -13,95 +13,63 @@ function [] = run_offline(obj, iterations)
 %
 % Authors: Jared Strader
 
-disp('Constructing DORM...');
+disp('Constructing DORM (using Hammersley Sampling)...');
 
 %% 1. Sample means
 disp('sampling means...');
 obj.G_=[];
 iter=0;
+k=1;
 while iter<iterations
+    %dimension of configuration space
+    n_configurations= size(obj.config_limits_,1); 
+    if(n_configurations~=2)
+        error('run_offline_qrm only implemented for 2D configuration space!');
+    end
     
-    if(~obj.enable_hammersley_)
-        %% uniform sampling
-        %dimension of configuration space
-        n_configurations= size(obj.config_limits_,1); 
-
-        %dimension of velocities
-        n_velocities = size(obj.vel_limits_,1); 
-
-        %used to determine if sampling velocities as well as configurations
-        N=[];
-        if(isempty(obj.vel_limits_))
-            N=n_configurations;
-        else
-            N=n_configurations+n_velocities;
-        end
-
-        %sample states
-        x_rand=zeros(obj.robot_.x_dim_, 1);
-        for i=1:N
-            if(i<=n_configurations)
-                %sample configurations
-                x_rand(i,1) = obj.config_limits_(i,1) + rand*(obj.config_limits_(i,2) - obj.config_limits_(i,1));
-            elseif(i<=n_velocities)
-                %sample velocities
-                x_rand(i,1) = obj.vel_limits_(i,1) + rand*(obj.vel_limits_(i,2) - obj.vel_limits_(i,1));
-            else
-                error('Attempting to sample states that are not velocities or configurations!');
-            end 
-        end
+    %dimension of velocities
+    n_velocities = size(obj.vel_limits_,1); 
+    
+    %used to determine if sampling velocities as well as configurations
+    N=[];
+    if(isempty(obj.vel_limits_))
+        N=n_configurations;
     else
-        %% hammersley sampling (only implemented for 2D)
-        %dimension of configuration space
-            n_configurations= size(obj.config_limits_,1); 
-            if(n_configurations~=2)
-                error('run_offline_qrm only implemented for 2D configuration space!');
-            end
-
-            %dimension of velocities
-            n_velocities = size(obj.vel_limits_,1); 
-
-            %used to determine if sampling velocities as well as configurations
-            N=[];
-            if(isempty(obj.vel_limits_))
-                N=n_configurations;
+        N=n_configurations+n_velocities;
+    end
+    
+    %hammersley sampling
+    if(isprime(k))
+        iter=iter+1;
+    else
+        k=k+1;
+        continue;
+    end
+    
+    %sample states
+    x_rand=zeros(obj.robot_.x_dim_, 1);
+    for i=1:N
+        if(i<=n_configurations)
+            %sample configurations
+            if(i==1)
+                x_rand(i,1) = obj.config_limits_(i,1) + iter/iterations*(obj.config_limits_(i,2) - obj.config_limits_(i,1));
+            elseif(i==2)
+                x_rand(i,1) = obj.config_limits_(i,1) + iter/iterations*(obj.config_limits_(i,2) - obj.config_limits_(i,1));
+                temp = de2bi(iter);
+                x_rand(i,1) = 0;
+                for j=1:length(temp)
+                    x_rand(i,1) = x_rand(i,1) + temp(j)/2^j;
+                end
+                x_rand(i,1) = obj.config_limits_(i,1) + x_rand(i,1)*(obj.config_limits_(i,2) - obj.config_limits_(i,1));
             else
-                N=n_configurations+n_velocities;
+                error('Number of configuration is greater than 2! run_offline_qrm only implemented for 2D.');
             end
-
-            %do hammersley sampling
-            if(isprime(k))
-                iter=iter+1;
-            else
-                k=k+1;
-                continue;
-            end
-
-            %sample states
-            x_rand=zeros(obj.robot_.x_dim_, 1);
-            for i=1:N
-                if(i<=n_configurations)
-                    %sample configurations
-                    if(i==1)
-                        x_rand(i,1) = obj.config_limits_(i,1) + iter/iterations*(obj.config_limits_(i,2) - obj.config_limits_(i,1));
-                    elseif(i==2)
-                        x_rand(i,1) = obj.config_limits_(i,1) + iter/iterations*(obj.config_limits_(i,2) - obj.config_limits_(i,1));
-                        temp = de2bi(iter);
-                        x_rand(i,1) = 0;
-                        for j=1:length(temp)
-                            x_rand(i,1) = x_rand(i,1) + temp(j)/2^j;
-                        end
-                        x_rand(i,1) = obj.config_limits_(i,1) + x_rand(i,1)*(obj.config_limits_(i,2) - obj.config_limits_(i,1));
-                    else
-                        error('Number of configuration is greater than 2! run_offline_qrm only implemented for 2D.');
-                    end
-                elseif(i<=n_velocities)
-                    %sample velocities
-                    x_rand(i,1) = obj.vel_limits_(i,1) + rand*(obj.vel_limits_(i,2) - obj.vel_limits_(i,1));
-                else
-                    error('Attempting to sample states that are not velocities or configurations!');
-                end 
-            end
+        elseif(i<=n_velocities)
+            %sample velocities
+            x_rand(i,1) = obj.vel_limits_(i,1) + rand*(obj.vel_limits_(i,2) - obj.vel_limits_(i,1));
+        else
+            error('Attempting to sample states that are not velocities or configurations!');
+        end 
     end
     
     %check if in free space
@@ -120,12 +88,6 @@ while iter<iterations
     v_new.x_seq = []; %sequence of states for incident edges
     v_new.u_seq = []; %sequence of control inputs for incident edges
     obj.G_ = [obj.G_ v_new];
-    
-    %only increment iter if hammersley sampling is disabled, if enabled
-    %iter is incremented above
-    if(~obj.enable_hammersley_)
-        iter=iter+1;
-    end
 end
 
 %% 2. Construct edge set

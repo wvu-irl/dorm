@@ -29,7 +29,7 @@ function [xi_params] = get_tf_dopt_params(obj, x, u)
 % Authors: Jared Strader
 %
 
-ell_vec = [1,400,800,1200]; %values of ell for fitting the functions
+ell_vec = [1,10,100,1000,10000]; %values of ell for fitting the functions
 xi_vec = []; %set of parameters for each value of ell
 for idx=1:length(ell_vec)
     xi = obj.get_tf_dopt(x,...

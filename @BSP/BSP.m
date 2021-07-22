@@ -1,4 +1,4 @@
-classdef BSP < handle
+classdef BSP < handle %matlab.mixin.Copyable
     properties
         %graph generated in offline phase
         G_;
@@ -53,6 +53,9 @@ classdef BSP < handle
         %obstacles represented as rectangles (i.e., see Rectangle class
         %for details on defining obstacles)
         obstacles_=[];
+        
+        %enable hammersley sampling
+        enable_hammersley_=false;
     end
     
 	%% Public
