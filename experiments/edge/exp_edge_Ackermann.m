@@ -6,18 +6,19 @@ close all;
 use_gps = true;
 
 %start state and goal state
-x0 = [0,0,0,0.1]';
-xT = [5,1,0,0]';
+x0 = [0,0,0]';
+xT = [5,1,0]';
 % xT = [rand*5, rand*5, rand*1, rand*1]';
 
 %initial covariance
-P0 = 1*eye(4);
+P0 = 1*eye(3);
 
 %noises
 param_sigma_uv=1*sqrt(0.1);
 param_sigma_uk=1*sqrt(0.1);
 param_sigma_x=1*sqrt(0.01);
 param_sigma_y=1*sqrt(0.01);
+param_sigma_h=1*sqrt(0.001);
 
 %% Parameters
 param_dt=0.1;
@@ -41,10 +42,11 @@ if(~use_gps)
 end
 
 %% Model
-robot = Ackermann2DwithGPS(param_sigma_uv,...
+robot = ModAckermann2DwithGPS(param_sigma_uv,...
                            param_sigma_uk,...
                            param_sigma_x,...
                            param_sigma_y,...
+                           param_sigma_h,...
                            param_dt,...
                            gps_regions);
 
@@ -72,8 +74,8 @@ end
 ell=max(eig(P));
 
 %% Get Transfer Functions (i.e., multi-step and one-step updates)
-xi = bsp.get_tf_dopt(x,u,ell);
-xi_params = bsp.get_tf_dopt_params(x,u);
+% xi = bsp.get_tf_dopt(x,u,ell);
+% xi_params = bsp.get_tf_dopt_params(x,u);
 
 %% colors
 col_b=[0, 0.4470, 0.7410];
@@ -100,7 +102,7 @@ subplot(212);
 plot(bsp.robot_.dt_*(0:1:size(x,2)-1),x(1,:),'linewidth',linewidth); grid on; xlabel('t (seconds)'); hold on;
 plot(bsp.robot_.dt_*(0:1:size(x,2)-1),x(2,:),'linewidth',linewidth); grid on; xlabel('t (seconds)'); hold on;
 plot(bsp.robot_.dt_*(0:1:size(x,2)-1),x(3,:),'linewidth',linewidth); grid on; xlabel('t (seconds)'); hold on;
-plot(bsp.robot_.dt_*(0:1:size(x,2)-1),x(4,:),'linewidth',linewidth); grid on; xlabel('t (seconds)'); hold on;
+%plot(bsp.robot_.dt_*(0:1:size(x,2)-1),x(4,:),'linewidth',linewidth); grid on; xlabel('t (seconds)'); hold on;
 legend('$x(t)$','$y(t)$','$v_x(t)$','$v_y(t)$','Interpreter','latex','FontSize',14,'Orientation','horizontal');
 title('$\mathbf{\bar{x}}_{1:N}$','Interpreter','latex');
 fn_format_fig();
@@ -123,25 +125,25 @@ ylabel('Y (meters)');
 fn_format_fig();
 
 %% Analysis
-data = fn_get_data_edge(bsp,x,u,P0);
-
-hfig=figure;
-set(gcf, 'Position',  [100, 100, 1.1*500, 1.1*450])
-fn_plot_metrics_edge(bsp, x, u, data);
-
-annotation(hfig,'arrow',[0.414285714285714 0.239285714285714],...
-    [0.888223552894211 0.888223552894211],'LineWidth',2);
-annotation(hfig,'arrow',[0.4125 0.344642857142856],...
-    [0.856287425149701 0.854291417165665],'LineWidth',2);
-annotation(hfig,'textbox',...
-    [0.418857142857143 0.844311377245507 0.234714285714286 0.0499001996007959],...
-    'String',{'GNSS regions'},...
-    'LineStyle','none',...
-    'FontWeight','bold',...
-    'FitBoxToText','off');
-annotation(hfig,'textbox',...
-    [0.727785714285712 0.842315369261476 0.161500000000001 0.0838323353293341],...
-    'String',{'Double','Integrator'},...
-    'FontWeight','bold',...
-    'FitBoxToText','off',...
-    'BackgroundColor',[1 1 1]);
+% data = fn_get_data_edge(bsp,x,u,P0);
+% 
+% hfig=figure;
+% set(gcf, 'Position',  [100, 100, 1.1*500, 1.1*450])
+% fn_plot_metrics_edge(bsp, x, u, data);
+% 
+% annotation(hfig,'arrow',[0.414285714285714 0.239285714285714],...
+%     [0.888223552894211 0.888223552894211],'LineWidth',2);
+% annotation(hfig,'arrow',[0.4125 0.344642857142856],...
+%     [0.856287425149701 0.854291417165665],'LineWidth',2);
+% annotation(hfig,'textbox',...
+%     [0.418857142857143 0.844311377245507 0.234714285714286 0.0499001996007959],...
+%     'String',{'GNSS regions'},...
+%     'LineStyle','none',...
+%     'FontWeight','bold',...
+%     'FitBoxToText','off');
+% annotation(hfig,'textbox',...
+%     [0.727785714285712 0.842315369261476 0.161500000000001 0.0838323353293341],...
+%     'String',{'Double','Integrator'},...
+%     'FontWeight','bold',...
+%     'FitBoxToText','off',...
+%     'BackgroundColor',[1 1 1]);

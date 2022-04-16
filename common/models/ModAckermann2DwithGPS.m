@@ -1,13 +1,13 @@
-classdef Ackermann2DwithGPS < GenericStateSpaceModel
+classdef ModAckermann2DwithGPS < GenericStateSpaceModel
     %% Properties
     properties (Constant = true)
-        x_dim_ = 4; %x,y position, orientation, steering angle
-        u_dim_ = 2; % speed, rate of change of steering angle
+        x_dim_ = 3; %x,y position, steering angle
+        u_dim_ = 2; % speed, steering angle
         w_dim_ = 2; %noise derivatives of speed and steering angle
         y_dim_ = 2; %x and y position
         v_dim_ = 2; %noise in x and y positions
 
-        car_len = 1;
+        car_len_ = 1;
     end
     
     properties
@@ -19,15 +19,16 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
     
     methods
         %% Constructor
-        function obj = Ackermann2DwithGPS(sigma_uv,...
+        function obj = ModAckermann2DwithGPS(sigma_uv,...
                                           sigma_uk,...
                                           sigma_x,...
                                           sigma_y,...
+                                          sigma_h,...
                                           dt,...
                                           gps_regions)
             obj@GenericStateSpaceModel();      
             obj.Q_ = diag([sigma_uv^2, sigma_uk^2]);
-            obj.R_ = diag([sigma_x^2, sigma_y^2]);
+            obj.R_ = diag([sigma_x^2, sigma_y^2, sigma_h^2]);
             obj.dt_ = dt;
             obj.gps_regions_ = gps_regions;
         end
@@ -54,15 +55,13 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
             w = obj.get_process_noise(x, u, dt);
             x(1) = x(1) + obj.dt_*( u(1) + w(1) )*cos(x(3)); % X
             x(2) = x(2) + obj.dt_*( u(1) + w(1) )*sin(x(3)); % Y
-            x(3) = x(3) + obj.dt_*tan(x(4))/obj.car_len;      % Theta
-            x(4) = x(4) + obj.dt_*(u(2) + w(2));  % Psi
+            x(3) = x(3) + obj.dt_*( u(1) + w(1) )*tan(u(2) + w(2))/obj.car_len_;      % Theta
         end
         
         function x = propagate_state_without_noise(obj, x, u)
             x(1) = x(1) + obj.dt_*u(1)*cos(x(3)); % X
             x(2) = x(2) + obj.dt_*u(1)*sin(x(3)); % Y
-            x(3) = x(3) + obj.dt_*tan(x(4))/l;      % Theta
-            x(4) = x(4) + obj.dt_*u(2);  % Psi
+            x(3) = x(3) + obj.dt_*u(1)*tan(w(2))/l;      % Theta
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -82,25 +81,27 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function A = get_process_jacobian(obj, x, u)
             %Ad = I + A*dt
-            A = [1, 0, -sin(x(3))*obj.dt_*u(1), 0;...
-                 0, 1,  cos(x(3))*obj.dt_*u(1), 0;...
-                 0, 0,  1,                      obj.dt_/obj.car_len*sec(x(4))^2;...
-                 0, 0,  0,                      obj.dt_*u(2)];
+            A = eye(3);
+            A(3,1) = -u(1)*obj.dt_*sin(x(3));
+            A(3,2) =  u(1)*obj.dt_*cos(x(3));
+
 %             A_continuous = obj.get_process_matrix_continuous(x,u);
 %             A = eye(obj.x_dim_) + A_continuous*obj.dt_; 
         end
         
         function B = get_control_jacobian(obj, x, u)
             %Bd = B*dt
-            B_continuous = obj.get_control_matrix_continuous(x,u);
-            B = obj.dt_*B_continuous; 
+            % B_continuous = obj.get_control_matrix_continuous(x,u);
+            % B = obj.dt_*B_continuous; 
+            B = [cos(x(3)), 0;...
+                 sin(x(3)), 0;...
+                 tan(u(2))/obj.car_len_, (u(1))*sec(u(2))^2/obj.car_len_]*obj.dt_;
         end
         
         function L = get_process_noise_jacobian(obj, x, u)
-            L = [0,       0;...
-                 0,       0;...
-                 obj.dt_, 0;...
-                 0,       obj.dt_];
+            L = [cos(x(3)),       0;...
+                 sin(x(3)),       0;...
+                 0,               0]*obj.dt_;
         end
         
         %%%%%%%%%%%%%%%%%%%%%%%%%%
@@ -108,15 +109,14 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
         %%%%%%%%%%%%%%%%%%%%%%%%%%
         function A = get_process_matrix_continuous(obj, x, u)
 %             error('not implemented');
-            A = zeros(4); 
+            A = eye(3); 
         end
         
         function B = get_control_matrix_continuous(obj, x, u)
 %             error('not implemented');
-            B = [cos(x(3)),0;...
-                 sin(x(3)),0;...
-                 tan(x(4))/obj.car_len,0;...
-                 0,1];
+            B = [cos(x(3)), 0;...
+                 sin(x(3)), 0;...
+                 0, (u(1))/obj.car_len_];
         end
         
         %% Observation Model
@@ -168,8 +168,9 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
         %%%%%%%measurement jacobians%%%%%%%
         %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
         function H = get_measurement_jacobian(obj, x)
-            H = [1,0,0,0;...
-                 0,1,0,0]; 
+            H = [1,0,0;...
+                 0,1,0;...
+                 0,0,1]; 
         end
         
         function M = get_measurement_noise_jacobian(obj, x)
@@ -182,18 +183,19 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
         % xf = [x;y], goal state
         % dt = time step in seconds
         function [x,u] = get_states_and_control_inputs(obj, xi, xf)
-            K = obj.get_control_law_lqr(xi);
+            
             
             %compute states and control inputs
             x=xi-xf; %moves setpoint from xf to [0,0]
-            u=[];
-            while 1          
-                A = obj.get_process_jacobian(x(:,end),[]);
-                B = obj.get_control_jacobian(x(:,end),[]);
+            u=[0,0]';
+            while 1 
+                K = obj.get_control_law_lqr(x(:,end), u(:,end));
+                A = obj.get_process_jacobian(x(:,end),u(:,end));
+                B = obj.get_control_jacobian(x(:,end),u(:,end));
 %                 c = obj.propagate_state_without_noise(x(:,end)+xf,zeros(obj.u_dim_,1));
 %                 B=[B,c];
 %                 K = obj.get_control_law_lqr(x);
-                u = [u, -K*(x(:,end))];
+                u = [u, -K'*(x(:,end))];
                 x = [x, A*x(:,end) + B*u(:,end)];
                 
 %                 xtemp = obj.propagate_state_without_noise(x(:,end)+xf, u(:,end));
@@ -210,10 +212,10 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
         %% Compute control law using LQR
         % Inputs:
         % dt = time step in seconds
-        function [K] = get_control_law_lqr(obj,x)
+        function [K] = get_control_law_lqr(obj,x,u)
             %model
-            A = obj.get_process_jacobian(x,[0,0]');
-            B = obj.get_control_jacobian(x,[0,0]');
+            A = obj.get_process_jacobian(x,u');
+            B = obj.get_control_jacobian(x,u');
 %             c = obj.propagate_state_without_noise(x,zeros(obj.u_dim_,1));
 %             B=[B,c];
 
@@ -224,8 +226,8 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
 %                  0,0,1,0,0;...
 %                  0,0,0,0,0;...
 %                  0,0,0,0,0];
-            W = 1*eye(4); %weight on states
-            V = 1*eye(2); %weight on control inputs
+            W = 100*eye(obj.x_dim_); %weight on states
+            V = 1*eye(obj.u_dim_); %weight on control inputs
 %             V = eye(3); %weight on control inputs
 
             %solve discrete time algebraic ricatti equation (DARE) for
@@ -236,6 +238,9 @@ classdef Ackermann2DwithGPS < GenericStateSpaceModel
             %where R=Rk, A=Ak, B=Bk
             [P,K,L] = dare(A, B, W, V, [], []);
             K = (V + B'*P*B)^-1*B'*P*A; %steady state gain
+            %   1
+            %   [~, ~, ~, k, ~] = IH_DLQR(x, A, B, 50, W, W, V, 0.05, 0.25);
+            %   K = reshape(k(1:6),[3,2]);
             
             %using lqr function
 %             [K,S,e] = lqr(A,B,W,V);
