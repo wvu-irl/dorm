@@ -28,9 +28,9 @@ function nlobj = create_nlmpc_ackermann_obj(dt)
     nlobj.Model.StateFcn = "state_fcn";
     nlobj.Jacobian.StateFcn = "state_jacobian_fcn";
 
-    % nlobj_.Optimization.CustomCostFcn = "cost_fcn";
-    % nlobj_.Optimization.ReplaceStandardCost = true;
-    % nlobj_.Jacobian.CustomCostFcn = "cost_jacobian_fcn";
+    nlobj_.Optimization.CustomCostFcn = "cost_fcn";
+    nlobj_.Optimization.ReplaceStandardCost = true;
+    nlobj_.Jacobian.CustomCostFcn = "cost_jacobian_fcn";
 
     % nlobj_.Optimization.CustomIneqConFcn = "inequality_constraints_fcn";
     % nlobj_.Jacobian.CustomIneqConFcn = "inequality_constraints_jacobian_fcn";
